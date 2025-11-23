@@ -1,0 +1,33 @@
+﻿import React, { useEffect, useState } from "react";
+
+export default function App() {
+  const [status, setStatus] = useState<any>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/health");
+        const j = await res.json();
+        setStatus(j);
+      } catch (e: any) {
+        setErr(String(e));
+      }
+    })();
+  }, []);
+
+  return (
+    <div style={{padding:24}}>
+      <h1 style={{margin:0}}>DeAI Verse — Minimal</h1>
+      <p>If you see this, React + Vite are rendering correctly.</p>
+
+      {err && <div style={{color:"salmon"}}>Error calling /health: {err}</div>}
+      {!err && !status && <div>Loading /health…</div>}
+      {status && (
+        <pre style={{background:"#111",padding:12,borderRadius:8,marginTop:12}}>
+          {JSON.stringify(status, null, 2)}
+        </pre>
+      )}
+    </div>
+  );
+}

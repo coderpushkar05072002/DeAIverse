@@ -1,0 +1,74 @@
+﻿<header className="site-header">
+  <div className="site-brand">
+    <div className="brand-icon">DA</div>
+    <div className="brand-text">
+      <h1 className="brand-title">DeAIverse</h1>
+      <div className="brand-tag">AI + Compute marketplace</div>
+    </div>
+  </div>
+
+  <div className="header-actions">
+    {/* Basic connect button - replace with your actual connect logic if needed */}
+    <button className="btn btn-primary" onClick={() => (window as any).ethereum?.request?.({ method: 'eth_requestAccounts' })}>
+      Connect Wallet
+    </button>
+  </div>
+</header>
+import React from "react";
+import Header from "./components/Header";
+import Hero from "./components/Hero";
+import Dashboard from "./components/Dashboard";
+import useWallet from "./hooks/useWallet";
+import useContracts from "./hooks/useContracts";
+
+export default function App(){
+  const { account, connect, disconnect } = useWallet();
+
+  // Build a provider in a safe, parser-friendly way (no `new` after optional chain)
+  let provider: any = undefined;
+  try {
+    const win: any = window;
+    if (win.ethereum) {
+      // prefer ethers providers if ethers exists
+      if (win.ethers && win.ethers.providers && typeof win.ethers.providers.Web3Provider === "function") {
+        provider = new win.ethers.providers.Web3Provider(win.ethereum);
+      } else if (win.ethers && win.ethers.BrowserProvider && typeof win.ethers.BrowserProvider === "function") {
+        // ethers v6 BrowserProvider fallback (requires being called with window.ethereum)
+        provider = new win.ethers.BrowserProvider(win.ethereum);
+      } else {
+        // last-resort: pass raw window.ethereum for hooks that accept it
+        provider = win.ethereum;
+      }
+    }
+  } catch (e) {
+    console.warn("Provider construction failed, falling back to undefined", e);
+    provider = undefined;
+  }
+
+  // pass the provider (or undefined) to your hook
+  const { createTask } = useContracts(provider) || {};
+
+  async function handleCreate(price:string, cid:string){
+    try {
+      if (!createTask) throw new Error("createTask not ready");
+      const consumer = account || (window as any).ethereum?.selectedAddress || (window as any).ethereum?.accounts?.[0] || "";
+      await createTask(consumer, price, cid);
+      alert("Task creation attempted (check console / backend).");
+    } catch (e:any){
+      console.error("Create task error", e);
+      alert("Error: " + (e?.message || e));
+    }
+  }
+
+  return (
+    <div className="app-container">
+      <Header account={account} onConnect={connect} onDisconnect={disconnect} />
+      <Hero />
+      <Dashboard onCreate={(price:string,cid:string)=>handleCreate(price,cid)} />
+      <footer className="mt-8 text-center text-sm" style={{color:"var(--muted)"}}>Made with - Pushkar</footer>`r`n  </div>
+  );
+}
+
+
+
+

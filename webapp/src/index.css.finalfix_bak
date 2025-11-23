@@ -1,0 +1,149 @@
+﻿/* Tailwind + app theme (navy gradient, modern buttons) */
+
+/* Tailwind entry (kept) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Color variables (used in custom classes) */
+:root{
+  --bg-900: #071022;   /* deep navy */
+  --bg-800: #081226;
+  --card: rgba(255,255,255,0.03);
+  --muted: #b6c4d9;
+  --accent-from: #0ea5ff;  /* cyan */
+  --accent-to: #2563eb;    /* blue */
+  --button-text: #ffffff;
+}
+
+/* page background */
+html,body,#root { height:100%; margin:0; background:linear-gradient(180deg,var(--bg-900),var(--bg-800)); color:var(--muted); font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+
+/* cards */
+.app-card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius: 14px; padding: 28px; box-shadow: 0 8px 30px rgba(2,6,23,0.6); border: 1px solid rgba(255,255,255,0.03); }
+
+/* Hero */
+.hero-title { font-weight:800; font-size:clamp(2rem,4.6vw,3.6rem); color: transparent; background: linear-gradient(90deg,var(--accent-from),var(--accent-to)); -webkit-background-clip:text; background-clip:text; letter-spacing:-0.02em; margin:0 0 12px 0; }
+.hero-sub { color: rgba(255,255,255,0.66); max-width:900px; margin:0 auto 18px auto; }
+
+/* Buttons - modern primary gradient with subtle glow */
+.btn { display:inline-block; padding:0.6rem 1.1rem; border-radius:999px; font-weight:600; cursor:pointer; border:0; line-height:1; }
+.btn-primary { background: linear-gradient(90deg,var(--accent-from),var(--accent-to)); color:var(--button-text); box-shadow: 0 8px 28px rgba(37,99,235,0.15), 0 0 30px rgba(14,165,255,0.12); }
+.btn-ghost { background: rgba(255,255,255,0.03); color:var(--muted); border:1px solid rgba(255,255,255,0.04); }
+
+/* Input styles */
+.input { width:100%; padding:0.9rem 1rem; border-radius:12px; background: rgba(255,255,255,0.01); color: #e6eefb; border: 1px solid rgba(255,255,255,0.03); outline:none; }
+.input::placeholder { color: rgba(230,238,251,0.28); }
+.label { color: rgba(230,238,251,0.82); font-weight:600; }
+
+/* Header layout helpers */
+.site-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; }
+.site-brand { display:flex; align-items:center; gap:12px; }
+.brand-icon { width:56px; height:56px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--accent-to),var(--accent-from)); color:white; font-weight:700; box-shadow: 0 10px 25px rgba(14,165,255,0.09); }
+.brand-text { display:flex; flex-direction:column; line-height:1; }
+.brand-title { font-weight:800; color:#e6eefb; font-size:1.1rem; margin:0; }
+.brand-tag { color: rgba(230,238,251,0.6); font-size:0.9rem; margin:0; }
+
+/* Wallet button alignment (right) */
+.header-actions { margin-left:auto; display:flex; align-items:center; gap:10px; z-index:20; }
+
+/* Footer */
+.footer-credit { text-align:center; color: rgba(230,238,251,0.6); padding:20px 0; }
+
+/* Fix overlapping wallet button on narrow screens */
+@media (max-width:900px){
+  .site-header { flex-direction:column; align-items:center; gap:8px; }
+  .header-actions { width:100%; display:flex; justify-content:center; }
+  .brand-text { text-align:center; }
+}
+
+/* small helpers */
+.mt-6{margin-top:1.5rem}
+.mb-6{margin-bottom:1.5rem}
+.w-2\/3{width:66%}
+/* ----- Extra UI polish (appended) ----- */
+
+/* Header layout */
+.site-header{
+  display:flex;
+  justify-content:center; /* center brand area */
+  align-items:center;
+  gap:20px;
+  position:relative;
+  padding:18px 24px;
+  max-width:1200px;
+  margin:0 auto;
+}
+
+/* Brand */
+.site-brand{ display:flex; align-items:center; gap:14px; }
+.brand-icon{
+  width:64px; height:64px; border-radius:14px;
+  background: linear-gradient(135deg,#1e3a8a,#06b6d4);
+  display:flex; align-items:center; justify-content:center;
+  color:white; font-weight:700; font-size:20px;
+  box-shadow: 0 8px 30px rgba(3,105,161,0.18), inset 0 -6px 18px rgba(255,255,255,0.03);
+}
+.brand-title{ font-size:20px; font-weight:700; margin:0; color:#e6f0ff; }
+.brand-tag{ font-size:12px; color:#bcd9f8; margin-top:2px; }
+
+/* Keep wallet action positioned top-right without overlapping */
+.header-actions{
+  position:absolute;
+  right:20px;
+  top:14px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* Buttons (modern gradient) */
+.btn{
+  padding:10px 16px;
+  border-radius:12px;
+  border:0;
+  cursor:pointer;
+  font-weight:600;
+  box-shadow: 0 8px 30px rgba(3,105,161,0.12);
+}
+.btn-primary{
+  background: linear-gradient(90deg,#0ea5e9,#3b82f6);
+  color:white;
+}
+.btn-ghost{
+  background: rgba(255,255,255,0.03);
+  color:#cfe8ff;
+  border:1px solid rgba(255,255,255,0.03);
+}
+
+/* Make hero headline more readable and accent color */
+.hero-title { color: #0ea5e9; font-weight:800; letter-spacing:-0.5px; }
+
+/* Card input readability */
+input[type="text"], input[type="number"], textarea {
+  background: rgba(255,255,255,0.03);
+  color: #e6edf3;
+  border: 1px solid rgba(255,255,255,0.04);
+  padding:10px 14px;
+  border-radius:12px;
+  outline: none;
+}
+input::placeholder, textarea::placeholder { color: rgba(230,237,243,0.35); }
+
+/* Card containers */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+  border-radius:18px;
+  padding:26px;
+  border:1px solid rgba(255,255,255,0.02);
+}
+
+/* Footer */
+.site-footer { text-align:center; color:#9fbfe9; padding:20px 0; font-size:14px; }
+
+/* small responsive tweak */
+@media (max-width:720px){
+  .brand-title{ font-size:18px; }
+  .brand-icon{ width:52px; height:52px; }
+  .header-actions{ right:12px; top:10px; }
+}

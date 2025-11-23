@@ -1,0 +1,62 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+/* Keep Tailwind layers */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Use plain CSS for base styling (no @apply of custom tokens) */
+html, body, #root {
+  min-height: 100vh;
+  margin: 0;
+  background: #0f172a;            /* was bg-background */
+  color: #ffffff;                  /* was text-white */
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* was font-sans */
+}
+
+/* Buttons: gradient + glow */
+button {
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  background-image: linear-gradient(90deg, #6366f1, #60a5fa);
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 0 10px rgba(99,102,241,0.18);
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+  border: none;
+  cursor: pointer;
+}
+button:hover { transform: scale(1.05); box-shadow: 0 0 12px rgba(99,102,241,0.35); }
+button:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Inputs: glassy */
+input {
+  background: rgba(30,41,59,0.6); /* fallback for card */
+  color: #fff;
+  border-radius: .75rem;
+  padding: .5rem .75rem;
+  outline: none;
+  border: 1px solid #334155;
+  width: 16rem;
+}
+input:focus { border-color: #6366f1; }
+
+/* Card: glass panel */
+.card {
+  background: rgba(30,41,59,0.6); /* was bg-card/60 */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(2,6,23,.35);
+  border: 1px solid #334155;     /* was border-gray-700 */
+}
+
+/* Headings: gradient accent */
+h1, h2, h3 {
+  font-weight: 600;
+  background: linear-gradient(90deg, #6366f1, #60a5fa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

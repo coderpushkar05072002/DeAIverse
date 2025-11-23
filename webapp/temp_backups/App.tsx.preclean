@@ -1,0 +1,51 @@
+﻿import React from "react";
+import Header from "./components/Header";
+import Hero from "./components/Hero";
+import Dashboard from "./components/Dashboard";
+import useWallet from "./hooks/useWallet";
+import useContracts from "./hooks/useContracts";
+
+export default function App() {
+  const { account, connect, disconnect } = useWallet();
+  let provider: any = undefined;
+
+  try {
+    const win: any = window;
+    if (win.ethereum) {
+      if (win.ethers?.providers?.Web3Provider) {
+        provider = new win.ethers.providers.Web3Provider(win.ethereum);
+      } else if (win.ethers?.BrowserProvider) {
+        provider = new win.ethers.BrowserProvider(win.ethereum);
+      } else provider = win.ethereum;
+    }
+  } catch (err) {
+    console.warn("Provider setup failed", err);
+  }
+
+  const { createTask } = useContracts(provider) || {};
+
+  async function handleCreate(price: string, cid: string) {
+    try {
+      if (!createTask) throw new Error("createTask not ready");
+      const consumer = account || (window as any).ethereum?.selectedAddress || "";
+      await createTask(consumer, price, cid);
+      alert("✅ Task creation called — check console & wallet.");
+    } catch (err: any) {
+      alert("❌ " + (err?.message || err));
+      console.error(err);
+    }
+  }
+
+  return (
+    <div className="app-container">
+      <Header account={account} onConnect={connect} onDisconnect={disconnect} />
+      <main className="px-6 md:px-12 lg:px-24">
+        <Hero />
+        <Dashboard onCreate={(price, cid) => handleCreate(price, cid)} />
+      </main>
+      <footer className="mt-8 text-center text-sm" style={{ color: "var(--muted)", padding: "1.25rem 0" }}>
+        Made with ❤️ by <b>Pushkar</b>
+      </footer>
+    </div>
+  );
+}

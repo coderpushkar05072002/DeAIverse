@@ -1,0 +1,12 @@
+﻿node_modules
+webapp\node_modules
+backend\.venv
+artifacts
+cache
+typechain-types
+dist
+webapp\dist
+.env
+.env.*
+backend\.env
+__pycache__

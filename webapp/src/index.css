@@ -1,0 +1,53 @@
+﻿@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap");
+:root{
+  --bg:#06070b; --panel:#071124; --muted:#9aa4b2; --gold:#ffcc57; --gold-dark:#e0a93a;
+  --card-shadow: 0 14px 40px rgba(2,6,14,0.7);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#041028,#030511);color:#eaf3ff;padding:26px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.brand{display:flex;gap:14px;align-items:center}
+.logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#ffb86b,#ffd15a);display:flex;align-items:center;justify-content:center;font-weight:900;color:#0a0a0a;font-size:22px;box-shadow:0 8px 24px rgba(255,177,94,0.12)}
+.brand-title{font-weight:800;font-size:20px}
+.brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.top-actions{display:flex;align-items:center;gap:10px}
+.task-count{background:rgba(255,243,205,0.03);padding:8px 12px;border-radius:12px;color:var(--gold);font-weight:700}
+.addr-pill{background:rgba(255,255,255,0.02);padding:8px 10px;border-radius:10px;color:var(--muted);font-size:13px}
+.btn{border:0;padding:10px 16px;border-radius:999px;cursor:pointer;font-weight:700;transition:all .14s ease}
+.btn-primary{background:linear-gradient(180deg,var(--gold),var(--gold-dark));color:#101010;box-shadow:0 10px 30px rgba(224,169,58,0.12)}
+.btn-primary:hover{transform:translateY(-3px)}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+/* layout */
+.main-grid{display:grid;grid-template-columns:1fr 420px;gap:22px;align-items:start}
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));padding:20px;border-radius:12px;box-shadow:var(--card-shadow);border:1px solid rgba(255,255,255,0.02)}
+.card-left{min-height:420px}
+.card-right{min-height:420px}
+
+h3{margin:0 0 12px 0;font-size:18px}
+.form-row{display:flex;flex-direction:column;margin-top:10px}
+.form-row label{font-size:13px;color:var(--muted);margin-bottom:8px}
+.form-row input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit;font-size:14px}
+.actions-row{margin-top:12px;display:flex;gap:10px;align-items:center}
+.toast{margin-top:12px;padding:12px;border-radius:10px;border-left:4px solid var(--gold);background:linear-gradient(90deg, rgba(255,204,87,0.04), rgba(255,204,87,0.02));color:var(--gold-dark);font-weight:700}
+.toast-err{background:linear-gradient(90deg, rgba(255,100,100,0.04), rgba(255,100,100,0.02));border-left-color:#ff6b6b;color:#ffb3b3}
+
+.task-list{display:flex;flex-direction:column;gap:12px;margin-top:8px;max-height:320px;overflow:auto;padding-right:6px}
+.task-card{background:rgba(4,18,28,0.7);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.02);box-shadow:0 6px 18px rgba(0,0,0,0.5)}
+.task-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.task-id{font-weight:800;color:var(--gold)}
+.badge{padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px}
+.badge.ok{background:rgba(40,110,60,0.12);color:#a7f3bf}
+.badge.pending{background:rgba(200,160,30,0.06);color:var(--gold)}
+
+.task-body .line{margin:6px 0;font-size:13px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace;color:#7fe0ff;background:rgba(255,255,255,0.02);padding:2px 6px;border-radius:6px}
+.small{font-size:12px;color:var(--muted)}
+
+.footer{margin-top:28px;color:var(--muted);font-size:14px}
+
+/* responsive */
+@media (max-width:980px){
+  .main-grid{grid-template-columns:1fr; }
+  body{padding:16px}
+}

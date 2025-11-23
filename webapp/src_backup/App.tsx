@@ -1,0 +1,54 @@
+﻿import React from "react";
+import Header from "./components/Header";
+import Hero from "./components/Hero";
+import Dashboard from "./components/Dashboard";
+import useWallet from "./hooks/useWallet";
+import useContracts from "./hooks/useContracts";
+
+export default function App(){
+  const { account, connect, disconnect } = useWallet();
+
+  // Build provider safely (avoid using 'new' after optional chaining)
+  let provider: any = undefined;
+  try {
+    const win: any = window;
+    if (win.ethereum) {
+      if (win.ethers && win.ethers.providers && typeof win.ethers.providers.Web3Provider === "function") {
+        provider = new win.ethers.providers.Web3Provider(win.ethereum);
+      } else if (win.ethers && win.ethers.BrowserProvider && typeof win.ethers.BrowserProvider === "function") {
+        provider = new win.ethers.BrowserProvider(win.ethereum);
+      } else {
+        provider = win.ethereum;
+      }
+    }
+  } catch(e){
+    console.warn("Provider construction failed", e);
+    provider = undefined;
+  }
+
+  const { createTask } = useContracts(provider) || {};
+
+  async function handleCreate(price:string, cid:string){
+    try {
+      if (!createTask) throw new Error("createTask not ready");
+      const consumer = account || (window as any).ethereum?.selectedAddress || "";
+      await createTask(consumer, price, cid);
+      alert("Task creation attempted.");
+    } catch(e:any){
+      console.error("Create task error", e);
+      alert("Error: " + (e?.message || e));
+    }
+  }
+
+  return (
+    <div className="app-container">
+      <Header account={account} onConnect={connect} onDisconnect={disconnect} />
+      <Hero />
+      <main style={{maxWidth:1100, margin:"1.6rem auto", padding:"0 1rem"}}>
+        <Dashboard onCreate={(price:string,cid:string)=>handleCreate(price,cid)} />
+      </main>
+Made with ❤️ by Pushkar
+    </div>
+  );
+}
+

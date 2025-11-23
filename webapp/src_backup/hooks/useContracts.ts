@@ -1,0 +1,99 @@
+import { useMemo } from "react";
+import * as E from "ethers";
+import TokenAbi from "../abis/Token.json";
+import MarketAbi from "../abis/ComputeMarket.json";
+import SbtAbi from "../abis/ReputationSBT.json";
+
+const TOKEN_ADDR = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const MARKET_ADDR = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+const SBT_ADDR = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+
+function ensureAbi(abi:any){ return abi?.abi ? abi.abi : abi; }
+
+export default function useContracts(provider?: any) {
+  const signer = provider && provider.getSigner ? provider.getSigner() : null;
+
+  const make = (addr:string, abi:any, s?:any) => {
+    const ABI = ensureAbi(abi);
+    try {
+      const ctor: any = (E as any).Contract || E.Contract;
+      return new ctor(addr, ABI, s || provider);
+    } catch (e) {
+      console.warn("make contract fallback", e);
+      return null;
+    }
+  };
+
+  const token = useMemo(()=> make(TOKEN_ADDR, TokenAbi, signer), [provider]);
+
+  const market = useMemo(()=> {
+    const m = make(MARKET_ADDR, MarketAbi, signer);
+    try {
+      // expose for debugging in browser console and list ABI functions
+      (window as any).__market = m;
+      const fnames = m?.interface?.fragments?.filter((f:any)=> f.type === "function").map((f:any)=> (f as any).format ? (f as any).format() : f.name) || [];
+      console.log("?? Market contract function signatures (from ABI):", fnames);
+    } catch(e){ console.warn("expose failed", e) }
+    return m;
+  }, [provider]);
+
+  const sbt = useMemo(()=> make(SBT_ADDR, SbtAbi, signer), [provider]);
+
+  function ensureMethod(obj:any, name:string) {
+    if (!obj) throw new Error("Contract instance missing for method: "+name);
+    try {
+      // will throw if function not found in ABI (ethers interface)
+      obj.interface.getFunction(name);
+      return true;
+    } catch (err) {
+      console.error(`Method missing on contract ABI: ${name}. ABI functions:`,
+        obj.interface?.fragments?.filter((f:any)=> f.type==='function')?.map((f:any)=> (f as any).format ? (f as any).format() : f.name));
+      throw new Error(`Contract method not found in ABI: ${name}`);
+    }
+  }
+
+  async function createTask(consumerAddr:string, priceEth:string, datasetCid:string) {
+    if (!market) throw new Error("Market contract missing");
+    ensureMethod(market, "createTask");
+    const utils:any = (E as any).utils || E.utils;
+    const price = utils ? utils.parseEther(priceEth) : priceEth;
+    const tx = await market.createTask(consumerAddr, price, datasetCid);
+    return tx.wait ? await tx.wait() : tx;
+  }
+
+  async function acceptTask(taskId:number) {
+    if (!market) throw new Error("Market contract missing");
+    ensureMethod(market, "acceptTask");
+    const tx = await market.acceptTask(taskId);
+    return tx.wait ? await tx.wait() : tx;
+  }
+
+  async function submitResult(taskId:number, resultCid:string) {
+    if (!market) throw new Error("Market contract missing");
+    ensureMethod(market, "submitResult");
+    const tx = await market.submitResult(taskId, resultCid);
+    return tx.wait ? await tx.wait() : tx;
+  }
+
+  async function verifyAndRelease(taskId:number, ok:boolean) {
+    if (!market) throw new Error("Market contract missing");
+    ensureMethod(market, "verifyAndRelease");
+    const tx = await market.verifyAndRelease(taskId, ok);
+    return tx.wait ? await tx.wait() : tx;
+  }
+
+  async function getTask(taskId:number) {
+    if (!market) throw new Error("Market contract missing");
+    for (const fn of ["tasks","getTask","tasksById"]) {
+      try {
+        if (typeof market[fn] === "function") {
+          const r = await market[fn](taskId);
+          return r;
+        }
+      } catch {}
+    }
+    throw new Error("No compatible view found on Market contract");
+  }
+
+  return { token, market, sbt, createTask, acceptTask, submitResult, verifyAndRelease, getTask };
+}

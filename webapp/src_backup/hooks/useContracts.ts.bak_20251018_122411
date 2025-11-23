@@ -1,0 +1,128 @@
+import { useMemo } from "react";
+import * as E from "ethers";
+import TokenAbi from "../abis/Token.json";
+import MarketAbi from "../abis/ComputeMarket.json";
+import SbtAbi from "../abis/ReputationSBT.json";
+
+const TOKEN_ADDR = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const MARKET_ADDR = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+const SBT_ADDR = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+
+function ensureAbi(abi:any){ return abi?.abi ? abi.abi : abi; }
+
+export default function useContracts(provider?: any) {
+  const signer = provider && typeof provider.getSigner === "function" ? provider.getSigner() : null;
+
+  const make = (addr:string, abi:any, s?:any) => {
+    const ABI = ensureAbi(abi);
+    try {
+      const ctor: any = (E as any).Contract || (E as any).ethers?.Contract || (E as any).Contract;
+      return new ctor(addr, ABI, s || provider);
+    } catch (e) {
+      console.warn("make contract fallback", e);
+      return null;
+    }
+  };
+
+  const token = useMemo(()=> make(TOKEN_ADDR, TokenAbi, signer), [provider]);
+  const market = useMemo(()=> {
+    const m = make(MARKET_ADDR, MarketAbi, signer);
+
+    // expose for debugging in browser console
+    try {
+      (window as any).__market = m;
+      // log ABI functions from the file (if available)
+      const abiArr = ensureAbi(MarketAbi) || [];
+      const fnNames = (abiArr.filter && abiArr.filter((x:any)=>x.type==='function').map((f:any)=>f.name)) || [];
+      console.log("?? Market contract function signatures (from ABI file):", fnNames);
+      console.log("?? Exposed market (initial):", m);
+    } catch(e){ console.warn("expose failed", e) }
+
+    // If the contract instance has a runner that is still a Promise (ethers v6 lazy runner),
+    // resolve it and re-create a Contract with the resolved runner so methods become real functions.
+    try {
+      if (m && (m as any).runner && typeof (m as any).runner.then === "function") {
+        console.log("market runner is Promise — resolving runner and rebuilding contract...");
+        (m as any).runner.then((resolvedRunner:any) => {
+          try {
+            const ctor: any = (E as any).Contract || (E as any).ethers?.Contract || (E as any).Contract;
+            const resolvedAddr = (m as any).target || (m as any).address || (m as any)._address;
+            const real = new ctor(resolvedAddr, ensureAbi(MarketAbi), resolvedRunner);
+            (window as any).__market = real;
+            console.log("? window.__market replaced with resolved-runner contract", real);
+          } catch (err) {
+            console.warn("replace with resolved runner failed", err);
+          }
+        }).catch((err:any)=>{
+          console.warn("runner resolution failed", err);
+        });
+      } else {
+        console.log("market runner not a Promise (no replacement needed)");
+      }
+    } catch(e) {
+      console.warn("runner-detection block failed", e);
+    }
+
+    return m;
+  }, [provider]);
+
+  const sbt = useMemo(()=> make(SBT_ADDR, SbtAbi, signer), [provider]);
+
+  function ensureMethod(obj:any, name:string) {
+    if (!obj) throw new Error("Contract instance missing for method: "+name);
+    try {
+      // ethers v6: use interface to check ABI
+      obj.interface.getFunction(name);
+      return true;
+    } catch (err) {
+      console.error(`Method missing on contract ABI: ${name}. ABI functions:`,
+        obj.interface?.fragments?.filter((f:any)=> f.type==='function')?.map((f:any)=> f.name || f.format()));
+      throw new Error(`Contract method not found in ABI: ${name}`);
+    }
+  }
+
+  async function createTask(consumerAddr:string, priceEth:string, datasetCid:string) {
+    if (!market) throw new Error("Market contract missing");
+    ensureMethod(market, "createTask");
+    const utils:any = (E as any).utils || (E as any).ethers?.utils || E.utils;
+    const price = utils ? (utils.parseEther ? utils.parseEther(priceEth) : priceEth) : priceEth;
+    const tx = await (market as any).createTask(consumerAddr, price, datasetCid);
+    return tx.wait ? await tx.wait() : tx;
+  }
+
+  async function acceptTask(taskId:number) {
+    if (!market) throw new Error("Market contract missing");
+    ensureMethod(market, "acceptTask");
+    const tx = await (market as any).acceptTask(taskId);
+    return tx.wait ? await tx.wait() : tx;
+  }
+
+  async function submitResult(taskId:number, resultCid:string) {
+    if (!market) throw new Error("Market contract missing");
+    ensureMethod(market, "submitResult");
+    const tx = await (market as any).submitResult(taskId, resultCid);
+    return tx.wait ? await tx.wait() : tx;
+  }
+
+  async function verifyAndRelease(taskId:number, ok:boolean) {
+    if (!market) throw new Error("Market contract missing");
+    ensureMethod(market, "verifyAndRelease");
+    const tx = await (market as any).verifyAndRelease(taskId, ok);
+    return tx.wait ? await tx.wait() : tx;
+  }
+
+  async function getTask(taskId:number) {
+    if (!market) throw new Error("Market contract missing");
+    for (const fn of ["tasks","getTask","tasksById"]) {
+      try {
+        if (typeof (market as any)[fn] === "function") {
+          const r = await (market as any)[fn](taskId);
+          return r;
+        }
+      } catch {}
+    }
+    throw new Error("No compatible view found on Market contract");
+  }
+
+  return { token, market, sbt, createTask, acceptTask, submitResult, verifyAndRelease, getTask };
+}

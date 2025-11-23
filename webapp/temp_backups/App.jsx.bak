@@ -1,0 +1,250 @@
+import React, { useEffect, useState } from "react";
+import client from "./api/client";
+
+export default function App() {
+  const [health, setHealth] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [price, setPrice] = useState("0.01");
+  const [cid, setCid] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+
+  const [wallet, setWallet] = useState("");
+  const [connecting, setConnecting] = useState(false);
+  const [walletErr, setWalletErr] = useState("");
+
+  useEffect(() => {
+    client.get("/health").then(res => setHealth(res.data)).catch(console.error);
+    client.get("/tasks").then(res => setTasks(res.data)).catch(console.error);
+  }, []);
+
+  // Create Task
+  const handleCreateTask = async (e) => {
+    e.preventDefault();
+    setMsg("");
+    setErr("");
+
+    if (!cid.trim()) {
+      setErr("Dataset CID is required.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const body = {
+        consumer: wallet || "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+        provider: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+        price: price,
+        dataset: cid,
+      };
+
+      const res = await client.post("/tasks", body);
+
+      if (res.data.ok) {
+        setTasks(prev => [...prev, res.data.task]);
+        setMsg(`Task #${res.data.task.id} created successfully.`);
+        setCid("");
+      }
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Connect Wallet
+  const handleConnectWallet = async () => {
+    setWalletErr("");
+    try {
+      if (!window.ethereum) {
+        setWalletErr("? MetaMask not found. Install it to continue.");
+        return;
+      }
+
+      setConnecting(true);
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      setWallet(accounts[0]);
+    } catch (e) {
+      setWalletErr(e.message);
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  return (
+    <div style={{
+      background: "linear-gradient(145deg, #07080b, #0d1117, #111827)",
+      minHeight: "100vh",
+      padding: "2.5rem",
+      color: "white",
+      fontFamily: "Inter, sans-serif",
+    }}>
+
+      {/* HEADER */}
+      <header style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "2.5rem"
+      }}>
+        <div>
+          <h1 style={{ fontSize: "1.8rem", fontWeight: "800", margin: 0 }}>AUREON Protocol</h1>
+          <p style={{ opacity: 0.6, marginTop: "0.25rem" }}>Decentralized Compute Network</p>
+        </div>
+
+        <button
+          onClick={handleConnectWallet}
+          disabled={connecting}
+          style={{
+            padding: ".70rem 1.4rem",
+            borderRadius: "999px",
+            border: "none",
+            fontWeight: 600,
+            background: wallet ? "#10b981" : "#facc15",
+            color: wallet ? "white" : "black",
+            cursor: connecting ? "wait" : "pointer",
+            boxShadow: "0 0 25px rgba(250,204,21,0.35)",
+          }}
+        >
+          {wallet
+            ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}`
+            : connecting
+              ? "Connecting..."
+              : "Connect Wallet"}
+        </button>
+      </header>
+
+      {/* HERO */}
+      <section style={{ marginBottom: "3rem" }}>
+        <h2 style={{ fontSize: "2.8rem", fontWeight: 800, lineHeight: "1.2" }}>
+          Compute your AI tasks — <br />
+          <span style={{ opacity: 0.85 }}>securely, transparently, and on-chain.</span>
+        </h2>
+        <p style={{ marginTop: "0.75rem", opacity: 0.75, maxWidth: 620 }}>
+          AUREON lets consumers submit datasets, providers compute results, and smart
+          contracts ensure verification & fair payouts.
+        </p>
+      </section>
+
+      {walletErr && <div style={{ color: "#f87171", marginBottom: "1rem" }}>{walletErr}</div>}
+
+      {/* TWO MAIN CARDS */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "2rem"
+      }}>
+
+        {/* CREATE TASK CARD */}
+        <div style={{
+          background: "rgba(255,255,255,0.04)",
+          padding: "2rem",
+          borderRadius: "1.2rem",
+          border: "1px solid rgba(255,255,255,0.08)",
+          backdropFilter: "blur(10px)",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.35)"
+        }}>
+          <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "1rem" }}>Create Task</h3>
+
+          <form onSubmit={handleCreateTask} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <input
+              value={price}
+              onChange={e => setPrice(e.target.value)}
+              placeholder="Price (ETH)"
+              style={{
+                padding: "0.75rem 1rem",
+                borderRadius: "0.6rem",
+                border: "1px solid #333",
+                background: "#0a0e14",
+                color: "white"
+              }}
+            />
+
+            <input
+              value={cid}
+              onChange={e => setCid(e.target.value)}
+              placeholder="Dataset CID (ipfs://...)"
+              style={{
+                padding: "0.75rem 1rem",
+                borderRadius: "0.6rem",
+                border: "1px solid #333",
+                background: "#0a0e14",
+                color: "white"
+              }}
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                padding: "0.75rem 1rem",
+                borderRadius: "0.6rem",
+                background: "#facc15",
+                border: "none",
+                fontSize: "1rem",
+                fontWeight: 700,
+                color: "#111",
+                cursor: loading ? "wait" : "pointer"
+              }}
+            >
+              {loading ? "Creating..." : "Create Task"}
+            </button>
+          </form>
+
+          {err && <div style={{ color: "#f87171", marginTop: "0.75rem" }}>? {err}</div>}
+          {msg && <div style={{ color: "#4ade80", marginTop: "0.75rem" }}>? {msg}</div>}
+        </div>
+
+        {/* TASK LIST CARD */}
+        <div style={{
+          background: "rgba(255,255,255,0.04)",
+          padding: "2rem",
+          borderRadius: "1.2rem",
+          border: "1px solid rgba(255,255,255,0.08)",
+          backdropFilter: "blur(10px)",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.35)",
+          maxHeight: "450px",
+          overflow: "auto"
+        }}>
+          <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "1rem" }}>Recent Tasks</h3>
+
+          <pre style={{ fontSize: "0.9rem", whiteSpace: "pre-wrap", overflowWrap: "anywhere", wordBreak: "break-word", maxWidth: "100%" }}>
+            {JSON.stringify(tasks, null, 2)}
+          </pre>
+        </div>
+      </div>
+
+      {/* BACKEND STATUS */}
+      <div style={{
+        marginTop: "3rem",
+        padding: "1.5rem",
+        background: "rgba(255,255,255,0.04)",
+        borderRadius: "1rem",
+        border: "1px solid rgba(255,255,255,0.08)",
+        maxWidth: 640,
+        overflow: "hidden"
+      }}>
+        <h3 style={{ marginBottom: "0.5rem" }}>Backend Status</h3>
+        <pre style={{
+          fontSize: "0.9rem",
+          whiteSpace: "pre-wrap",
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
+          maxWidth: "100%",
+          overflowX: "auto",
+          background: "transparent",
+          padding: 0,
+          margin: 0
+        }}>
+          {JSON.stringify(health, null, 2)}
+        </pre>
+      </div>
+
+      {/* FOOTER */}
+      <footer style={{ marginTop: "3rem", opacity: 0.5 }}>
+        Made with ?? by Pushkar
+      </footer>
+    </div>
+  );
+}
